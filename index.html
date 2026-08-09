@@ -9,20 +9,28 @@
   *, *::before, *::after {
     box-sizing: border-box;
   }
+  /* Without this, ID-selector rules like #bootScreen/#app (display: flex)
+     would outrank the browser's default [hidden] styling, so toggling the
+     `hidden` property in JS would not actually show/hide those elements. */
+  [hidden] {
+    display: none !important;
+  }
   body, html {
     margin: 0; padding: 0; height: 100%; overflow: hidden;
     background: black;
     color: #0f0;
-    font-family: 'Share Tech Mono monospace, monospace;
+    font-family: 'Share Tech Mono', monospace;
     user-select: none;
-   /* Cyberpunk neon green and red theme variables */
-  : {
+  }
+
+  /* Cyberpunk neon green and red theme variables */
+  :root {
     --bg-color: #000;
     --fg-color: #0f0;
     --accent-color: #0f0;
     --accent-red: #f21b3f;
     --panel-bg: rgba(0, 255, 0, 0.05);
-    --panel-bg-red: rgba(242, 27, , 0.07);
+    --panel-bg-red: rgba(242, 27, 63, 0.07);
     --glow-color: #0f0;
     --glow-color-red: #f21b3f;
     --scanline-opacity: 0.04;
@@ -39,16 +47,17 @@
     --scrollbar-thumb: rgba(242, 27, 63, 0.75);
   }
 
-  {
+  body, html {
     background-color: var(--bg-color);
     color: var(--fg-color);
   }
 
   /* Scrollbar for panels */
-  ::-webkit-scrollbar    width: 8px;
+  ::-webkit-scrollbar {
+    width: 8px;
     height: 8px;
   }
-  ::--scrollbar-track {
+  ::-webkit-scrollbar-track {
     background: var(--scrollbar-bg);
   }
   ::-webkit-scrollbar-thumb {
@@ -62,7 +71,8 @@
     flex-direction: column;
     height: 100vh;
     width: 100vw;
-    overflow: hidden    position: relative;
+    overflow: hidden;
+    position: relative;
     background: black;
   }
 
@@ -93,20 +103,22 @@
         rgba(0,0,0,0.1) 2px
  );
     z-index: 10;
-   /* Glassmorphism Panels base */
+  }
+
+  /* Glassmorphism Panels base */
   .panel {
     background: var(--panel-bg);
     border: 1px solid transparent;
     backdrop-filter: saturate(180%) blur(8px);
     box-shadow:
-       0 12px var(--glow-color),
+      0 0 12px var(--glow-color),
       inset 0 0 12px var(--glow-color);
     border-radius: 8px;
     color: var(--fg-color);
     padding: 12px 16px;
     overflow-y: auto;
     overflow-x: hidden;
-   -select: text;
+    user-select: text;
     display: flex;
     flex-direction: column;
     transition: background 0.3s ease, box-shadow 0.3s ease;
@@ -321,6 +333,7 @@
   /* Window styles */
   .window {
     position: absolute;
+    z-index: 1000;
     background: var(--panel-bg);
     border: 1px solid var(--accent-color);
     border-radius: 8px;
@@ -366,7 +379,7 @@
     cursor: pointer;
     padding: 0 6px;
     line-height: 1;
-    filter: drop-shadow0 0 1px var(--fg-color));
+    filter: drop-shadow(0 0 1px var(--fg-color));
     transition: color 0.3s ease;
   }
   .window .titlebar button:hover {
@@ -571,7 +584,8 @@
   .glitch {
     position: relative;
     color: var(--accent-color);
-    font-weight: 900    font-size: 2.5em;
+    font-weight: 900;
+    font-size: 2.5em;
     letter-spacing: 5px;
     margin-bottom: 6px;
   }
@@ -603,7 +617,7 @@
     40% { clip: rect(10px, 900px, 20px, 0); }
     50% { clip: rect(2px, 900px, 12px, 0); }
     60% { clip: rect(0, 900px, 0, 0); }
-    100% { clip: rect(, 900px, 0, 0); }
+    100% { clip: rect(0, 900px, 0, 0); }
   }
   @keyframes glitch2 {
     0% { clip: rect(0, 900px, 0, 0); }
@@ -794,7 +808,7 @@ const Utils = (() => {
   // Escape text for terminal
   function escapeHTML(text) {
     return text.replace(/[&<>"'`]/g, match => ({
-      '&': '&amp;',': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;'
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;'
     })[match]);
   }
   // Format bytes human readable
@@ -820,12 +834,12 @@ const Themes = (() => {
   function applyTheme(theme) {
     currentTheme = theme;
     if (theme === 'red') {
-     .documentElement.setAttribute('data-theme', 'red');
+      document.documentElement.setAttribute('data-theme', 'red');
     } else {
       document.documentElement.removeAttribute('data-theme');
     }
     localStorage.setItem(THEME_KEY, theme);
-    notify(`Theme switched to ${theme.toUpperCase()}`, 2500);
+    Notifications.show(`Theme switched to ${theme.toUpperCase()}`, 2500);
   }
   function toggleTheme() {
     applyTheme(currentTheme === 'green' ? 'red' : 'green');
@@ -1024,7 +1038,7 @@ const Background = (() => {
     gridCtx.shadowColor = '#0f0';
     gridCtx.shadowBlur = 3;
 
-    gridLines.for(line => {
+    gridLines.forEach(line => {
       gridCtx.beginPath();
       if(line.type === 'v') {
         gridCtx.moveTo(line.x, 0);
@@ -1192,7 +1206,7 @@ const Dashboard = (() => {
     {name: 'netstatus', desc: 'Show network status'},
     {name: 'notify', desc: 'Show a notification'},
     {name: 'fs', desc: 'Open file explorer window'},
-    {name: 'settings', desc 'Open settings window'},
+    {name: 'settings', desc: 'Open settings window'},
     {name: 'fps', desc: 'Toggle FPS counter'},
     {name: 'fullscreen', desc: 'Toggle fullscreen mode'},
     {name: 'sound', desc: 'Toggle sound on/off'},
@@ -1328,6 +1342,13 @@ const Dashboard = (() => {
     cmdHistory.unshift(cmd);
     cmdHistoryIndex = -1;
 
+    // The live-typing echo (.inputLine) is about to be finalized below via
+    // terminalPrintLine, so remove it first - otherwise both the live-typed
+    // line and the finalized line remain, duplicating every command.
+    removeCursor();
+    const staleInputLine = terminal.querySelector('.inputLine');
+    if(staleInputLine) staleInputLine.remove();
+
     terminalPrintLine("> " + cmd);
     let output = '';
     switch(cmd.toLowerCase()) {
@@ -1391,6 +1412,7 @@ const Dashboard = (() => {
 
   // Terminal input handling with on-screen keyboard and physical keyboard
   function terminalKeydownHandler(e) {
+    clearDemoTextIfNeeded();
     if(e.ctrlKey || e.metaKey) {
       if(e.key === 'k') { // clear
         terminalClear();
@@ -1461,7 +1483,6 @@ const Dashboard = (() => {
     cmdInput.focus();
     cmdInput.value = '';
     filterCommands('');
-    cmdSelectedIndex = -1;
   }
   function closeCommandPalette() {
     cmdPalette.style.display = 'none';
@@ -1473,6 +1494,8 @@ const Dashboard = (() => {
     } else {
       cmdFiltered = commands.filter(c => c.name.includes(t) || c.desc.includes(t));
     }
+    // Auto-select the top match so Enter runs it immediately (no need to press Arrow-Down first)
+    cmdSelectedIndex = cmdFiltered.length > 0 ? 0 : -1;
     renderCommandList();
   }
   function renderCommandList() {
@@ -1586,10 +1609,11 @@ const Dashboard = (() => {
       btn.textContent = k === 'Space' ? ' ' : k;
       btn.setAttribute('aria-label', 'Key ' + (k === 'Space' ? 'Space' : k));
       btn.onclick = () => {
+        clearDemoTextIfNeeded();
         if(k === 'Backspace') {
           terminalInput = terminalInput.slice(0, -1);
         } else if(k === 'Enter') {
-          handle(terminalInput);
+          handleCommand(terminalInput);
           terminalInput = '';
         } else if(k === 'Space') {
           terminalInput += ' ';
@@ -1909,10 +1933,15 @@ const Dashboard = (() => {
   let autoTypeText = '';
   let autoTypingIndex = 0;
   let typingIntervalId = null;
+  // True from the moment the demo starts until the user's first real
+  // keystroke - stays true even after the animation finishes, since the
+  // fully-typed demo text still sits untouched in terminalInput until then.
+  let isDemoText = false;
   function startAutoTyping(text) {
     autoTypeText = text;
     autoTypingIndex = 0;
     clearInterval(typingIntervalId);
+    isDemoText = true;
     typingIntervalId = setInterval(() => {
       if(autoTypingIndex < autoTypeText.length) {
         terminalInput += autoTypeText.charAt(autoTypingIndex);
@@ -1925,6 +1954,15 @@ const Dashboard = (() => {
   }
   function stopAutoTyping() {
     clearInterval(typingIntervalId);
+  }
+  // Call at the start of any real user input path to discard untouched demo
+  // text before it can get concatenated with what the user actually typed.
+  function clearDemoTextIfNeeded() {
+    if(isDemoText) {
+      stopAutoTyping();
+      terminalInput = '';
+      isDemoText = false;
+    }
   }
 
   // Initialization
@@ -2025,14 +2063,14 @@ const Sound = (() => {
 
 /* MAIN INITIALIZATION */
 window.onload = async () => {
-  Background.init();
+  const backgroundUpdate = Background.init();
   // Start boot sequence, dashboard init calls after
   await BootSequence.start();
 
   // Start animation loop
   function animate() {
     PerformanceMonitor.frame();
-    Background.init()(); // We keep redraw on resize event only
+    backgroundUpdate(); // Init runs once above; only redraw every frame
     requestAnimationFrame(animate);
   }
   requestAnimationFrame(animate);
